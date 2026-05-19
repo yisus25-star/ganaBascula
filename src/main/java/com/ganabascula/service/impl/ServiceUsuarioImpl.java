@@ -9,6 +9,8 @@ import com.ganabascula.repository.RolRepository;
 import com.ganabascula.repository.UsuarioRepository;
 import com.ganabascula.security.jwt.JwtService;
 import com.ganabascula.service.ServiceUsuario;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +21,21 @@ public class ServiceUsuarioImpl implements ServiceUsuario {
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    public ServiceUsuarioImpl(UsuarioRepository usuarioRepository,
-                              RolRepository rolRepository,
-                              PasswordEncoder passwordEncoder,
-                              JwtService jwtService) {
+    public ServiceUsuarioImpl(
+            UsuarioRepository usuarioRepository,
+            RolRepository rolRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager authenticationManager
+    ) {
 
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
@@ -55,21 +62,17 @@ public class ServiceUsuarioImpl implements ServiceUsuario {
     @Override
     public LoginResponseDto login(LoginRequestDto loginDTO) {
 
-        Usuario usuario = usuarioRepository.findByCedula(loginDTO.getCedula())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        boolean passwordCorrecta = passwordEncoder.matches(
-                loginDTO.getPassword(),
-                usuario.getPassword()
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginDTO.getCedula(),
+                        loginDTO.getPassword()
+                )
         );
 
-        if (!passwordCorrecta) {
-            throw new RuntimeException("Contraseña incorrecta");
-        }
-
-        String token = jwtService.generarToken(usuario.getCedula());
+        String token = jwtService.generarToken(
+                loginDTO.getCedula()
+        );
 
         return new LoginResponseDto(token);
     }
-
 }

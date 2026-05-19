@@ -31,4 +31,11 @@ public class Usuario {
     @JoinColumn(name = "rol_id", nullable = false)
     private Rol rol;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoUsuario estado = EstadoUsuario.PENDIENTE;
+
+    public enum EstadoUsuario {
+        PENDIENTE, ACTIVO, RECHAZADO
+    }
 }

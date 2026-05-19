@@ -26,6 +26,12 @@
 
     <dependencies>
 
+        <!-- Validación de datos en los DTOs - permite usar @NotNull, @NotBlank, @Positive -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
         <!-- SPRING DATA JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

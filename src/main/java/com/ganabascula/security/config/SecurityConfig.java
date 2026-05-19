@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -38,6 +39,21 @@ public class SecurityConfig {
     }
 
     @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+
+        DaoAuthenticationProvider authProvider =
+                new DaoAuthenticationProvider(
+                        customUserDetailService
+                );
+
+        authProvider.setPasswordEncoder(
+                passwordEncoder()
+        );
+
+        return authProvider;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
     ) throws Exception {
@@ -52,9 +68,13 @@ public class SecurityConfig {
                         )
                 )
 
-                .httpBasic(httpBasic -> httpBasic.disable())
+                .httpBasic(httpBasic ->
+                        httpBasic.disable()
+                )
 
-                .formLogin(form -> form.disable())
+                .formLogin(form ->
+                        form.disable()
+                )
 
                 .authorizeHttpRequests(auth -> auth
 
@@ -79,7 +99,9 @@ public class SecurityConfig {
                         .authenticated()
                 )
 
-                .userDetailsService(customUserDetailService)
+                .authenticationProvider(
+                        authenticationProvider()
+                )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,

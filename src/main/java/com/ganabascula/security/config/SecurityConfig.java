@@ -71,6 +71,7 @@ public class SecurityConfig {
                                 "/dashboard",
                                 "/ventas",
                                 "/historial",
+                                "/admin",
                                 // Endpoints públicos
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/registro",
@@ -88,7 +89,7 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
 
-                        .requestMatchers("/admin/**")
+                        .requestMatchers("/admin/**", "/api/v1/admin/**")
                         .hasRole("ADMIN")
 
                         .requestMatchers("/ganadero/**")

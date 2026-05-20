@@ -26,7 +26,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
 
@@ -34,22 +33,14 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config
     ) throws Exception {
-
         return config.getAuthenticationManager();
     }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-
         DaoAuthenticationProvider authProvider =
-                new DaoAuthenticationProvider(
-                        customUserDetailService
-                );
-
-        authProvider.setPasswordEncoder(
-                passwordEncoder()
-        );
-
+                new DaoAuthenticationProvider(customUserDetailService);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
@@ -59,7 +50,6 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
-
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .sessionManagement(session ->
@@ -68,24 +58,33 @@ public class SecurityConfig {
                         )
                 )
 
-                .httpBasic(httpBasic ->
-                        httpBasic.disable()
-                )
+                .httpBasic(httpBasic -> httpBasic.disable())
 
-                .formLogin(form ->
-                        form.disable()
-                )
+                .formLogin(form -> form.disable())
 
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers(
+                                // Páginas HTML
+                                "/login",
+                                "/register",
+                                "/dashboard",
+                                "/ventas",
+                                "/historial",
+                                // Endpoints públicos
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/registro",
                                 "/usuarios/login",
                                 "/usuarios/registro",
+                                // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
+                                // Recursos estáticos
+                                "/css/**",
+                                "/js/**",
                                 "/error"
                         ).permitAll()
 
@@ -99,9 +98,7 @@ public class SecurityConfig {
                         .authenticated()
                 )
 
-                .authenticationProvider(
-                        authenticationProvider()
-                )
+                .authenticationProvider(authenticationProvider())
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,

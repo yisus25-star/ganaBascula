@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Integral Ganadera — Historial</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #1F3864;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        header h1 { font-size: 15px; font-weight: 600; color: white; }
+
+        .btn-nueva {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .filtros {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        input:focus { border-color: #1F3864; }
+
+        .btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #1F3864; color: white; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+
+        .tabla-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .tabla-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr 1fr;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            font-size: 12px;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tabla-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1.5fr 1fr;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .tabla-row:hover { background: #f8f9fa; }
+        .tabla-row:last-child { border-bottom: none; }
+
+        .tabla-row .comprador {
+            font-size: 14px;
+            color: #1F3864;
+            font-weight: 500;
+        }
+
+        .tabla-row .fecha {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .tabla-row .total {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F3864;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-completada { background: #e6f4ee; color: #0F6E56; }
+        .badge-borrador { background: #fef9e7; color: #856404; }
+        .badge-anulada { background: #fdecea; color: #c0392b; }
+
+        .total-mes {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-mes span { font-size: 13px; color: #666; }
+        .total-mes strong { font-size: 18px; color: #1F3864; }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .empty .icon { font-size: 40px; margin-bottom: 12px; }
+
+        @media (max-width: 600px) {
+            .filtros { grid-template-columns: 1fr 1fr; }
+            .tabla-header { grid-template-columns: 2fr 1fr 1fr; }
+            .tabla-row { grid-template-columns: 2fr 1fr 1fr; }
+            .tabla-header .fecha-col,
+            .tabla-row .fecha { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <button class="btn-back" onclick="window.location.href='/dashboard'">←</button>
+        <h1>Mis ventas</h1>
+    </div>
+    <button class="btn-nueva" onclick="window.location.href='/ventas'">+ Nueva venta</button>
+</header>
+
+<div class="container">
+
+    <div class="filtros">
+        <div class="form-group">
+            <label>Comprador</label>
+            <input type="text" id="filtroComprador" placeholder="Buscar por nombre...">
+        </div>
+        <div class="form-group">
+            <label>Fecha inicio</label>
+            <input type="date" id="filtroInicio">
+        </div>
+        <div class="form-group">
+            <label>Fecha fin</label>
+            <input type="date" id="filtroFin">
+        </div>
+        <div style="display:flex; gap:6px">
+            <button class="btn btn-primary" onclick="filtrar()">Buscar</button>
+            <button class="btn btn-outline" onclick="limpiarFiltros()">✕</button>
+        </div>
+    </div>
+
+    <div class="tabla-container">
+        <div class="tabla-header">
+            <span>Comprador</span>
+            <span class="fecha-col">Fecha</span>
+            <span>Total neto</span>
+            <span>Estado</span>
+        </div>
+        <div id="listaVentas">
+            <div class="empty">
+                <div class="icon">📋</div>
+                <p>Cargando ventas...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="total-mes">
+        <span>Total del período consultado</span>
+        <strong id="totalPeriodo">$0</strong>
+    </div>
+
+</div>
+
+<script>
+    const token = sessionStorage.getItem('token');
+    if (!token) window.location.href = '/login';
+
+    let todasLasVentas = [];
+
+    async function cargarVentas() {
+        try {
+            const response = await fetch('/api/v1/transacciones', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                todasLasVentas = await response.json();
+                renderizarVentas(todasLasVentas);
+            } else {
+                mostrarVacio('Error al cargar las ventas.');
+            }
+        } catch (error) {
+            mostrarVacio('Error de conexión.');
+        }
+    }
+
+    async function filtrar() {
+        const comprador = document.getElementById('filtroComprador').value.trim();
+        const inicio = document.getElementById('filtroInicio').value;
+        const fin = document.getElementById('filtroFin').value;
+
+        try {
+            let url = '/api/v1/transacciones';
+
+            if (comprador) {
+                url = `/api/v1/transacciones/filtrar/comprador?nombre=${encodeURIComponent(comprador)}`;
+            } else if (inicio && fin) {
+                url = `/api/v1/transacciones/filtrar/fecha?fechaInicio=${inicio}&fechaFin=${fin}`;
+            }
+
+            const response = await fetch(url, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                const ventas = await response.json();
+                renderizarVentas(ventas);
+            }
+        } catch (error) {
+            mostrarVacio('Error al filtrar.');
+        }
+    }
+
+    function limpiarFiltros() {
+        document.getElementById('filtroComprador').value = '';
+        document.getElementById('filtroInicio').value = '';
+        document.getElementById('filtroFin').value = '';
+        renderizarVentas(todasLasVentas);
+    }
+
+    function renderizarVentas(ventas) {
+        const lista = document.getElementById('listaVentas');
+
+        if (!ventas || ventas.length === 0) {
+            mostrarVacio('No tienes ventas registradas aún.');
+            document.getElementById('totalPeriodo').textContent = '$0';
+            return;
+        }
+
+        lista.innerHTML = '';
+        let total = 0;
+
+        ventas.forEach(v => {
+            const badge = v.estado === 'COMPLETADA'
+                ? 'badge-completada' : v.estado === 'BORRADOR'
+                    ? 'badge-borrador' : 'badge-anulada';
+
+            if (v.estado === 'COMPLETADA') total += v.totalNeto || 0;
+
+            lista.innerHTML += `
+                    <div class="tabla-row" onclick="window.location.href='/ventas/${v.id}'">
+                        <span class="comprador">${v.nombreComprador}</span>
+                        <span class="fecha">${formatearFecha(v.fecha)}</span>
+                        <span class="total">$${(v.totalNeto || 0).toLocaleString('es-CO')}</span>
+                        <span class="badge ${badge}">${v.estado}</span>
+                    </div>`;
+        });
+
+        document.getElementById('totalPeriodo').textContent = '$' + total.toLocaleString('es-CO');
+    }
+
+    function mostrarVacio(msg) {
+        document.getElementById('listaVentas').innerHTML = `
+                <div class="empty">
+                    <div class="icon">📋</div>
+                    <p>${msg}</p>
+                </div>`;
+    }
+
+    function formatearFecha(fecha) {
+        if (!fecha) return '—';
+        const d = new Date(fecha);
+        return d.toLocaleDateString('es-CO');
+    }
+
+    cargarVentas();
+</script>
+</body>
+</html>

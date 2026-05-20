@@ -30,4 +30,9 @@ public class ViewController {
     public String historial() {
         return "historial";
     }
+
+    @GetMapping("/admin")
+    public String admin() {
+        return "admin";
+    }
 }

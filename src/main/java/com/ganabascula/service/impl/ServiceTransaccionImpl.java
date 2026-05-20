@@ -3,12 +3,11 @@ package com.ganabascula.service.impl;
 import com.ganabascula.dto.request.CategoriaAnimalRequestDto;
 import com.ganabascula.dto.request.GastoAdicionalRequestDto;
 import com.ganabascula.dto.request.TransaccionRequestDto;
-import com.ganabascula.dto.response.CategoriaAnimalResponseDto;
-import com.ganabascula.dto.response.GastoAdicionalResponseDto;
 import com.ganabascula.dto.response.TransaccionResponseDto;
 import com.ganabascula.entity.*;
 import com.ganabascula.entity.CategoriaAnimal.TipoAnimal;
 import com.ganabascula.entity.Transaccion.EstadoTransaccion;
+import com.ganabascula.mapper.TransaccionMapper;
 import com.ganabascula.repository.*;
 import com.ganabascula.service.ServiceTransaccion;
 import org.springframework.stereotype.Service;
@@ -31,16 +30,19 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
     private final CategoriaAnimalRepository categoriaAnimalRepository;
     private final GastoAdicionalRepository gastoAdicionalRepository;
     private final UsuarioRepository usuarioRepository;
+    private final TransaccionMapper transaccionMapper;
 
     public ServiceTransaccionImpl(
             TransaccionRepository transaccionRepository,
             CategoriaAnimalRepository categoriaAnimalRepository,
             GastoAdicionalRepository gastoAdicionalRepository,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            TransaccionMapper transaccionMapper) {
         this.transaccionRepository = transaccionRepository;
         this.categoriaAnimalRepository = categoriaAnimalRepository;
         this.gastoAdicionalRepository = gastoAdicionalRepository;
         this.usuarioRepository = usuarioRepository;
+        this.transaccionMapper = transaccionMapper;
     }
 
     @Override
@@ -49,14 +51,11 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
         Usuario usuario = usuarioRepository.findByCedula(cedula)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Transaccion transaccion = new Transaccion();
+        Transaccion transaccion = transaccionMapper.toEntity(dto);
         transaccion.setUsuario(usuario);
-        transaccion.setNombreComprador(dto.getNombreComprador());
-        transaccion.setFecha(dto.getFecha());
-        transaccion.setObservaciones(dto.getObservaciones());
         transaccion.setEstado(EstadoTransaccion.BORRADOR);
 
-        return mapToDto(transaccionRepository.save(transaccion));
+        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
     }
 
     @Override
@@ -105,11 +104,9 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
         categoria.setValorCategoria(valorCategoria);
 
         categoriaAnimalRepository.save(categoria);
-
-        // Recalcular totales
         recalcularTotales(transaccion);
 
-        return mapToDto(transaccionRepository.save(transaccion));
+        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
     }
 
     @Override
@@ -129,10 +126,9 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
         gasto.setAplica(true);
 
         gastoAdicionalRepository.save(gasto);
-
         recalcularTotales(transaccion);
 
-        return mapToDto(transaccionRepository.save(transaccion));
+        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
     }
 
     @Override
@@ -141,17 +137,16 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
         Transaccion transaccion = obtenerTransaccionValidada(transaccionId, cedula);
 
         if (transaccion.getCategorias().isEmpty()) {
-            throw new RuntimeException("La transaccion debe tener al menos una categoria de animales");
+            throw new RuntimeException("La transaccion debe tener al menos una categoria");
         }
 
         transaccion.setEstado(EstadoTransaccion.COMPLETADA);
-
-        return mapToDto(transaccionRepository.save(transaccion));
+        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
     }
 
     @Override
     public TransaccionResponseDto obtenerTransaccion(Long transaccionId, String cedula) {
-        return mapToDto(obtenerTransaccionValidada(transaccionId, cedula));
+        return transaccionMapper.toDto(obtenerTransaccionValidada(transaccionId, cedula));
     }
 
     @Override
@@ -159,7 +154,7 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
         Usuario usuario = usuarioRepository.findByCedula(cedula)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return transaccionRepository.findByUsuario(usuario)
-                .stream().map(this::mapToDto).collect(Collectors.toList());
+                .stream().map(transaccionMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
@@ -170,7 +165,7 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
                         usuario,
                         LocalDate.parse(fechaInicio),
                         LocalDate.parse(fechaFin))
-                .stream().map(this::mapToDto).collect(Collectors.toList());
+                .stream().map(transaccionMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
@@ -179,10 +174,8 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         return transaccionRepository.findByUsuarioAndNombreCompradorContainingIgnoreCase(
                         usuario, nombreComprador)
-                .stream().map(this::mapToDto).collect(Collectors.toList());
+                .stream().map(transaccionMapper::toDto).collect(Collectors.toList());
     }
-
-    // MÉTODOS PRIVADOS
 
     private boolean esMacho(TipoAnimal tipo) {
         return tipo == TipoAnimal.BECERRO
@@ -191,18 +184,15 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
     }
 
     private void recalcularTotales(Transaccion transaccion) {
-        // Total bruto = suma de todas las categorías
         BigDecimal totalBruto = transaccion.getCategorias().stream()
                 .map(CategoriaAnimal::getValorCategoria)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Total gastos
         BigDecimal totalGastos = transaccion.getGastos().stream()
                 .filter(GastoAdicional::getAplica)
                 .map(GastoAdicional::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Total neto = total bruto - gastos
         transaccion.setTotalBruto(totalBruto);
         transaccion.setTotalNeto(totalBruto.subtract(totalGastos));
     }
@@ -216,53 +206,5 @@ public class ServiceTransaccionImpl implements ServiceTransaccion {
         }
 
         return transaccion;
-    }
-
-    private TransaccionResponseDto mapToDto(Transaccion transaccion) {
-        TransaccionResponseDto dto = new TransaccionResponseDto();
-        dto.setId(transaccion.getId());
-        dto.setNombreComprador(transaccion.getNombreComprador());
-        dto.setFecha(transaccion.getFecha());
-        dto.setEstado(transaccion.getEstado());
-        dto.setTotalBruto(transaccion.getTotalBruto());
-        dto.setTotalNeto(transaccion.getTotalNeto());
-        dto.setObservaciones(transaccion.getObservaciones());
-        dto.setFechaRegistro(transaccion.getFechaRegistro());
-
-        dto.setCategorias(transaccion.getCategorias().stream()
-                .map(this::mapCategoriaToDto)
-                .collect(Collectors.toList()));
-
-        dto.setGastos(transaccion.getGastos().stream()
-                .map(this::mapGastoToDto)
-                .collect(Collectors.toList()));
-
-        return dto;
-    }
-
-    private CategoriaAnimalResponseDto mapCategoriaToDto(CategoriaAnimal categoria) {
-        CategoriaAnimalResponseDto dto = new CategoriaAnimalResponseDto();
-        dto.setId(categoria.getId());
-        dto.setTipo(categoria.getTipo());
-        dto.setCantidad(categoria.getCantidad());
-        dto.setPesoBrutoKg(categoria.getPesoBrutoKg());
-        dto.setAplicaDestare(categoria.getAplicaDestare());
-        dto.setPorcentajeDestare(categoria.getPorcentajeDestare());
-        dto.setPesoNetoKg(categoria.getPesoNetoKg());
-        dto.setPrecioPorKilo(categoria.getPrecioPorKilo());
-        dto.setAplicaBono(categoria.getAplicaBono());
-        dto.setValorBono(categoria.getValorBono());
-        dto.setValorCategoria(categoria.getValorCategoria());
-        return dto;
-    }
-
-    private GastoAdicionalResponseDto mapGastoToDto(GastoAdicional gasto) {
-        GastoAdicionalResponseDto dto = new GastoAdicionalResponseDto();
-        dto.setId(gasto.getId());
-        dto.setTipo(gasto.getTipo());
-        dto.setDescripcion(gasto.getDescripcion());
-        dto.setValor(gasto.getValor());
-        dto.setAplica(gasto.getAplica());
-        return dto;
     }
 }

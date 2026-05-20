@@ -1,10 +1,200 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Integral Ganadera — Iniciar sesión</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: #e6f4ee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 28px;
+        }
+
+        .logo h1 {
+            font-size: 18px;
+            color: #1F3864;
+            font-weight: 600;
+        }
+
+        .logo p {
+            font-size: 13px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #444;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: #1F3864; }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #1F3864;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #162a50; }
+
+        .link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .link a { color: #1F3864; text-decoration: none; font-weight: 500; }
+
+        .alert {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert-error { background: #fdecea; color: #c0392b; border-left: 3px solid #c0392b; }
+        .alert-warning { background: #fef9e7; color: #856404; border-left: 3px solid #f0ad4e; }
+    </style>
 </head>
 <body>
+<div class="card">
+    <div class="logo">
+        <div class="logo-icon">🐄</div>
+        <h1>Plataforma Integral Ganadera</h1>
+        <p>Inicia sesión para continuar</p>
+    </div>
 
+    <div class="alert alert-error" id="errorMsg"></div>
+    <div class="alert alert-warning" id="warningMsg"></div>
+
+    <div class="form-group">
+        <label>Cédula</label>
+        <input type="text" id="cedula" placeholder="Ingresa tu cédula">
+    </div>
+
+    <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="password" placeholder="••••••••">
+    </div>
+
+    <button class="btn" onclick="login()">Entrar</button>
+
+    <div class="link">
+        ¿No tienes cuenta? <a href="/register">Regístrate</a>
+    </div>
+</div>
+
+<script>
+    async function login() {
+        const cedula = document.getElementById('cedula').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('warningMsg').style.display = 'none';
+
+        if (!cedula || !password) {
+            mostrarError('Por favor ingresa tu cédula y contraseña.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cedula, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                sessionStorage.setItem('token', data.token);
+                sessionStorage.setItem('cedula', cedula);
+                window.location.href = '/dashboard';
+            } else if (response.status === 403) {
+                mostrarWarning('Tu cuenta está pendiente de aprobación por el administrador.');
+            } else {
+                mostrarError(data.message || 'Cédula o contraseña incorrectos.');
+            }
+        } catch (error) {
+            mostrarError('Error de conexión. Verifica que el servidor esté corriendo.');
+        }
+    }
+
+    function mostrarError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function mostrarWarning(msg) {
+        const el = document.getElementById('warningMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    // Login con Enter
+    document.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') login();
+    });
+</script>
 </body>
 </html>

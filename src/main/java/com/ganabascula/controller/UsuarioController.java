@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/api/v1/auth")
 public class UsuarioController {
 
     private final ServiceUsuario serviceUsuario;
@@ -23,12 +23,9 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponseDto> registrarUsuario(
             @RequestBody RegistroUsuarioRequestDto registroDTO
     ) {
-
         serviceUsuario.registrarUsuario(registroDTO);
-
         UsuarioResponseDto response =
                 new UsuarioResponseDto("Usuario registrado correctamente");
-
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -36,10 +33,7 @@ public class UsuarioController {
     public ResponseEntity<LoginResponseDto> login(
             @RequestBody LoginRequestDto loginDTO
     ) {
-
         LoginResponseDto response = serviceUsuario.login(loginDTO);
-
         return ResponseEntity.ok(response);
     }
-
 }

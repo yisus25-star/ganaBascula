@@ -82,5 +82,4 @@ public class TransaccionController {
             Authentication auth) {
         return ResponseEntity.ok(
                 serviceTransaccion.filtrarPorComprador(auth.getName(), nombre));
-    }
-}
+    }}

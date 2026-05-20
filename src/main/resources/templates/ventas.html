@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Integral Ganadera — Nueva venta</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #1F3864;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-back {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        header h1 { font-size: 15px; font-weight: 600; color: white; }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1F3864;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .form-group { margin-bottom: 12px; }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: #1F3864; }
+
+        .checkbox-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+        }
+
+        .checkbox-row label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary { background: #1F3864; color: white; }
+        .btn-primary:hover { background: #162a50; }
+        .btn-success { background: #0F6E56; color: white; }
+        .btn-success:hover { background: #0a5240; }
+        .btn-danger { background: #fdecea; color: #c0392b; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #1F3864;
+            color: #1F3864;
+        }
+
+        .btn-full { width: 100%; padding: 12px; font-size: 14px; }
+
+        .categoria-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+
+        .categoria-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .tipo-badge {
+            background: #e6f4ee;
+            color: #0F6E56;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .valor-categoria {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1F3864;
+            text-align: right;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+        }
+
+        .total-box {
+            background: #e6f4ee;
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #085041;
+            margin-bottom: 6px;
+        }
+
+        .total-row.final {
+            font-size: 16px;
+            font-weight: 600;
+            padding-top: 10px;
+            border-top: 1px solid #5DCAA5;
+            margin-top: 4px;
+        }
+
+        .alert {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert-error { background: #fdecea; color: #c0392b; border-left: 3px solid #c0392b; }
+        .alert-success { background: #e6f4ee; color: #0F6E56; border-left: 3px solid #0F6E56; }
+
+        @media (max-width: 500px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <button class="btn-back" onclick="window.location.href='/dashboard'">←</button>
+    <h1>Nueva venta</h1>
+</header>
+
+<div class="container">
+
+    <div class="alert alert-error" id="errorMsg"></div>
+    <div class="alert alert-success" id="successMsg"></div>
+
+    <!-- Datos de la venta -->
+    <div class="card">
+        <div class="card-title">Datos de la venta</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nombre del comprador *</label>
+                <input type="text" id="nombreComprador" placeholder="Carlos Rodríguez">
+            </div>
+            <div class="form-group">
+                <label>Fecha de la venta *</label>
+                <input type="date" id="fecha">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Observaciones</label>
+            <input type="text" id="observaciones" placeholder="Opcional">
+        </div>
+        <button class="btn btn-primary" onclick="crearVenta()">Crear venta</button>
+    </div>
+
+    <!-- Categorías -->
+    <div class="card" id="seccionCategorias" style="display:none">
+        <div class="card-title">
+            Categorías de animales
+            <button class="btn btn-outline" onclick="mostrarFormCategoria()">+ Agregar</button>
+        </div>
+
+        <div id="formCategoria" style="display:none; margin-bottom:16px">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo de animal *</label>
+                    <select id="tipoAnimal">
+                        <option value="">Selecciona...</option>
+                        <option value="BECERRO">Becerro</option>
+                        <option value="BECERRA">Becerra</option>
+                        <option value="NOVILLO">Novillo</option>
+                        <option value="NOVILLA">Novilla</option>
+                        <option value="TORO">Toro</option>
+                        <option value="VACA">Vaca</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cantidad *</label>
+                    <input type="number" id="cantidad" placeholder="5" min="1" oninput="calcularPreview()">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Peso bruto (kg) *</label>
+                    <input type="number" id="pesoBruto" placeholder="1500" min="0" step="0.01" oninput="calcularPreview()">
+                </div>
+                <div class="form-group">
+                    <label>Precio por kilo ($) *</label>
+                    <input type="number" id="precioPorKilo" placeholder="8000" min="0" oninput="calcularPreview()">
+                </div>
+            </div>
+            <div class="checkbox-row">
+                <label>
+                    <input type="checkbox" id="aplicaDestare" onchange="calcularPreview()">
+                    Destare (5% machos / 6% hembras)
+                </label>
+                <label>
+                    <input type="checkbox" id="aplicaBono" onchange="calcularPreview()">
+                    Bono $42.800/animal
+                </label>
+            </div>
+            <div id="previewCategoria" style="margin-top:10px; font-size:13px; color:#1F3864; font-weight:600; display:none"></div>
+            <div style="display:flex; gap:8px; margin-top:12px">
+                <button class="btn btn-primary" onclick="agregarCategoria()">Guardar categoría</button>
+                <button class="btn btn-outline" onclick="document.getElementById('formCategoria').style.display='none'">Cancelar</button>
+            </div>
+        </div>
+
+        <div id="listaCategorias"></div>
+    </div>
+
+    <!-- Gastos adicionales -->
+    <div class="card" id="seccionGastos" style="display:none">
+        <div class="card-title">
+            Gastos adicionales
+            <button class="btn btn-outline" onclick="mostrarFormGasto()">+ Agregar</button>
+        </div>
+
+        <div id="formGasto" style="display:none; margin-bottom:16px">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo de gasto *</label>
+                    <select id="tipoGasto">
+                        <option value="">Selecciona...</option>
+                        <option value="TRANSPORTE">Transporte</option>
+                        <option value="VAQUEROS">Vaqueros</option>
+                        <option value="ALIMENTACION">Alimentación</option>
+                        <option value="GUIAS_SANITARIAS">Guías sanitarias</option>
+                        <option value="BASCULA">Báscula</option>
+                        <option value="COMISION">Comisión</option>
+                        <option value="OTROS">Otros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor ($) *</label>
+                    <input type="number" id="valorGasto" placeholder="150000" min="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Descripción</label>
+                <input type="text" id="descripcionGasto" placeholder="Opcional">
+            </div>
+            <div style="display:flex; gap:8px">
+                <button class="btn btn-primary" onclick="agregarGasto()">Guardar gasto</button>
+                <button class="btn btn-outline" onclick="document.getElementById('formGasto').style.display='none'">Cancelar</button>
+            </div>
+        </div>
+
+        <div id="listaGastos"></div>
+    </div>
+
+    <!-- Total -->
+    <div class="card" id="seccionTotal" style="display:none">
+        <div class="card-title">Resumen de la venta</div>
+        <div class="total-box">
+            <div class="total-row">
+                <span>Total bruto</span>
+                <span id="totalBruto">$0</span>
+            </div>
+            <div class="total-row">
+                <span>Gastos adicionales</span>
+                <span id="totalGastos">- $0</span>
+            </div>
+            <div class="total-row final">
+                <span>Total neto</span>
+                <span id="totalNeto">$0</span>
+            </div>
+        </div>
+        <button class="btn btn-success btn-full" style="margin-top:16px" onclick="completarVenta()">
+            Guardar venta
+        </button>
+    </div>
+
+</div>
+
+<script>
+    const token = sessionStorage.getItem('token');
+    if (!token) window.location.href = '/login';
+
+    let transaccionId = null;
+
+    // Poner fecha de hoy por defecto
+    document.getElementById('fecha').valueAsDate = new Date();
+
+    async function crearVenta() {
+        const nombreComprador = document.getElementById('nombreComprador').value.trim();
+        const fecha = document.getElementById('fecha').value;
+        const observaciones = document.getElementById('observaciones').value.trim();
+
+        if (!nombreComprador || !fecha) {
+            mostrarError('El nombre del comprador y la fecha son obligatorios.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/transacciones', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ nombreComprador, fecha, observaciones })
+            });
+
+            const data = await response.json();
+
+            if (response.ok || response.status === 201) {
+                transaccionId = data.id;
+                document.getElementById('seccionCategorias').style.display = 'block';
+                document.getElementById('seccionGastos').style.display = 'block';
+                document.getElementById('seccionTotal').style.display = 'block';
+                mostrarExito('Venta creada. Ahora agrega las categorías de animales.');
+            } else {
+                mostrarError(data.message || 'Error al crear la venta.');
+            }
+        } catch (error) {
+            mostrarError('Error de conexión.');
+        }
+    }
+
+    function mostrarFormCategoria() {
+        document.getElementById('formCategoria').style.display = 'block';
+    }
+
+    function mostrarFormGasto() {
+        document.getElementById('formGasto').style.display = 'block';
+    }
+
+    function calcularPreview() {
+        const cantidad = parseFloat(document.getElementById('cantidad').value) || 0;
+        const pesoBruto = parseFloat(document.getElementById('pesoBruto').value) || 0;
+        const precio = parseFloat(document.getElementById('precioPorKilo').value) || 0;
+        const aplicaDestare = document.getElementById('aplicaDestare').checked;
+        const aplicaBono = document.getElementById('aplicaBono').checked;
+        const tipo = document.getElementById('tipoAnimal').value;
+
+        if (!cantidad || !pesoBruto || !precio) {
+            document.getElementById('previewCategoria').style.display = 'none';
+            return;
+        }
+
+        // Calcular destare
+        let porcentaje = 0;
+        if (aplicaDestare) {
+            const machos = ['BECERRO', 'NOVILLO', 'TORO'];
+            porcentaje = machos.includes(tipo) ? 0.05 : 0.06;
+        }
+
+        const pesoNeto = pesoBruto - (pesoBruto * porcentaje);
+        const bono = aplicaBono ? 42800 * cantidad : 0;
+        const valor = (pesoNeto * precio) - bono;
+
+        const preview = document.getElementById('previewCategoria');
+        preview.style.display = 'block';
+        preview.textContent = `Peso neto: ${pesoNeto.toFixed(2)} kg — Valor: $${valor.toLocaleString('es-CO')}`;
+    }
+
+    async function agregarCategoria() {
+        const tipo = document.getElementById('tipoAnimal').value;
+        const cantidad = document.getElementById('cantidad').value;
+        const pesoBrutoKg = document.getElementById('pesoBruto').value;
+        const precioPorKilo = document.getElementById('precioPorKilo').value;
+        const aplicaDestare = document.getElementById('aplicaDestare').checked;
+        const aplicaBono = document.getElementById('aplicaBono').checked;
+
+        if (!tipo || !cantidad || !pesoBrutoKg || !precioPorKilo) {
+            mostrarError('Completa todos los campos de la categoría.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/transacciones/${transaccionId}/categorias`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    tipo,
+                    cantidad: parseInt(cantidad),
+                    pesoBrutoKg: parseFloat(pesoBrutoKg),
+                    precioPorKilo: parseFloat(precioPorKilo),
+                    aplicaDestare,
+                    aplicaBono
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok || response.status === 201) {
+                actualizarTotales(data);
+                renderizarCategorias(data.categorias);
+                limpiarFormCategoria();
+                document.getElementById('formCategoria').style.display = 'none';
+            } else {
+                mostrarError(data.message || 'Error al agregar categoría.');
+            }
+        } catch (error) {
+            mostrarError('Error de conexión.');
+        }
+    }
+
+    async function agregarGasto() {
+        const tipo = document.getElementById('tipoGasto').value;
+        const valor = document.getElementById('valorGasto').value;
+        const descripcion = document.getElementById('descripcionGasto').value.trim();
+
+        if (!tipo || !valor) {
+            mostrarError('Selecciona el tipo de gasto e ingresa el valor.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/transacciones/${transaccionId}/gastos`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    tipo,
+                    valor: parseFloat(valor),
+                    descripcion
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok || response.status === 201) {
+                actualizarTotales(data);
+                renderizarGastos(data.gastos);
+                limpiarFormGasto();
+                document.getElementById('formGasto').style.display = 'none';
+            } else {
+                mostrarError(data.message || 'Error al agregar gasto.');
+            }
+        } catch (error) {
+            mostrarError('Error de conexión.');
+        }
+    }
+
+    async function completarVenta() {
+        try {
+            const response = await fetch(`/api/v1/transacciones/${transaccionId}/completar`, {
+                method: 'PATCH',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                mostrarExito('Venta guardada exitosamente.');
+                setTimeout(() => window.location.href = '/historial', 2000);
+            } else {
+                const data = await response.json();
+                mostrarError(data.message || 'Error al guardar la venta.');
+            }
+        } catch (error) {
+            mostrarError('Error de conexión.');
+        }
+    }
+
+    function actualizarTotales(data) {
+        document.getElementById('totalBruto').textContent = '$' + (data.totalBruto || 0).toLocaleString('es-CO');
+        document.getElementById('totalNeto').textContent = '$' + (data.totalNeto || 0).toLocaleString('es-CO');
+
+        const gastos = (data.gastos || []).reduce((sum, g) => sum + g.valor, 0);
+        document.getElementById('totalGastos').textContent = '- $' + gastos.toLocaleString('es-CO');
+    }
+
+    function renderizarCategorias(categorias) {
+        const lista = document.getElementById('listaCategorias');
+        lista.innerHTML = '';
+        (categorias || []).forEach(c => {
+            lista.innerHTML += `
+                    <div class="categoria-item">
+                        <div class="categoria-header">
+                            <span class="tipo-badge">${c.tipo}</span>
+                            <small>${c.cantidad} animales · ${c.pesoBrutoKg} kg bruto</small>
+                        </div>
+                        <small>Destare: ${c.aplicaDestare ? (c.porcentajeDestare * 100) + '%' : 'No'} · Bono: ${c.aplicaBono ? 'Sí' : 'No'}</small>
+                        <div class="valor-categoria">$${(c.valorCategoria || 0).toLocaleString('es-CO')}</div>
+                    </div>`;
+        });
+    }
+
+    function renderizarGastos(gastos) {
+        const lista = document.getElementById('listaGastos');
+        lista.innerHTML = '';
+        (gastos || []).forEach(g => {
+            lista.innerHTML += `
+                    <div class="categoria-item">
+                        <div class="categoria-header">
+                            <span>${g.tipo}</span>
+                            <strong>$${(g.valor || 0).toLocaleString('es-CO')}</strong>
+                        </div>
+                        ${g.descripcion ? `<small>${g.descripcion}</small>` : ''}
+                    </div>`;
+        });
+    }
+
+    function limpiarFormCategoria() {
+        document.getElementById('tipoAnimal').value = '';
+        document.getElementById('cantidad').value = '';
+        document.getElementById('pesoBruto').value = '';
+        document.getElementById('precioPorKilo').value = '';
+        document.getElementById('aplicaDestare').checked = false;
+        document.getElementById('aplicaBono').checked = false;
+        document.getElementById('previewCategoria').style.display = 'none';
+    }
+
+    function limpiarFormGasto() {
+        document.getElementById('tipoGasto').value = '';
+        document.getElementById('valorGasto').value = '';
+        document.getElementById('descripcionGasto').value = '';
+    }
+
+    function mostrarError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+
+    function mostrarExito(msg) {
+        const el = document.getElementById('successMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(() => el.style.display = 'none', 4000);
+    }
+</script>
+</body>
+</html>

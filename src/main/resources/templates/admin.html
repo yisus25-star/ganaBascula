@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Integral Ganadera — Panel Administrador</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #1F3864;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .header-left span { font-size: 20px; }
+        .header-left h1 { font-size: 15px; font-weight: 600; }
+
+        .btn-logout {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+
+        .metricas {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .metrica-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .metrica-card .numero {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1F3864;
+        }
+
+        .metrica-card .label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .metrica-card.pendientes .numero { color: #856404; }
+        .metrica-card.activos .numero { color: #0F6E56; }
+        .metrica-card.rechazados .numero { color: #c0392b; }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1F3864;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            background: white;
+            color: #555;
+        }
+
+        .tab.active {
+            background: #1F3864;
+            color: white;
+            border-color: #1F3864;
+        }
+
+        .usuario-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr 1.5fr;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .usuario-row:last-child { border-bottom: none; }
+
+        .usuario-nombre { font-weight: 500; color: #1F3864; }
+        .usuario-cedula { color: #666; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-pendiente { background: #fef9e7; color: #856404; }
+        .badge-activo { background: #e6f4ee; color: #0F6E56; }
+        .badge-rechazado { background: #fdecea; color: #c0392b; }
+
+        .acciones {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-aprobar { background: #e6f4ee; color: #0F6E56; }
+        .btn-aprobar:hover { background: #0F6E56; color: white; }
+        .btn-rechazar { background: #fdecea; color: #c0392b; }
+        .btn-rechazar:hover { background: #c0392b; color: white; }
+        .btn-desactivar { background: #f0f4f8; color: #555; }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            .metricas { grid-template-columns: repeat(2, 1fr); }
+            .usuario-row { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <span>🐄</span>
+        <h1>Panel Administrador</h1>
+    </div>
+    <button class="btn-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+</header>
+
+<div class="container">
+
+    <!-- Métricas -->
+    <div class="metricas">
+        <div class="metrica-card pendientes">
+            <div class="numero" id="metPendientes">0</div>
+            <div class="label">Pendientes</div>
+        </div>
+        <div class="metrica-card activos">
+            <div class="numero" id="metActivos">0</div>
+            <div class="label">Activos</div>
+        </div>
+        <div class="metrica-card rechazados">
+            <div class="numero" id="metRechazados">0</div>
+            <div class="label">Rechazados</div>
+        </div>
+        <div class="metrica-card">
+            <div class="numero" id="metVentas">0</div>
+            <div class="label">Total ventas</div>
+        </div>
+    </div>
+
+    <!-- Usuarios -->
+    <div class="card">
+        <div class="card-title">Gestión de ganaderos</div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="filtrarUsuarios('PENDIENTE', this)">Pendientes</button>
+            <button class="tab" onclick="filtrarUsuarios('ACTIVO', this)">Activos</button>
+            <button class="tab" onclick="filtrarUsuarios('RECHAZADO', this)">Rechazados</button>
+            <button class="tab" onclick="filtrarUsuarios('TODOS', this)">Todos</button>
+        </div>
+
+        <div id="listaUsuarios">
+            <div class="empty">Cargando usuarios...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const token = sessionStorage.getItem('token');
+    if (!token) window.location.href = '/login';
+
+    let todosLosUsuarios = [];
+    let filtroActual = 'PENDIENTE';
+
+    async function cargarDatos() {
+        try {
+            const response = await fetch('/api/v1/admin/usuarios', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                todosLosUsuarios = await response.json();
+                actualizarMetricas();
+                renderizarUsuarios(filtroActual);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function actualizarMetricas() {
+        document.getElementById('metPendientes').textContent =
+            todosLosUsuarios.filter(u => u.estado === 'PENDIENTE').length;
+        document.getElementById('metActivos').textContent =
+            todosLosUsuarios.filter(u => u.estado === 'ACTIVO').length;
+        document.getElementById('metRechazados').textContent =
+            todosLosUsuarios.filter(u => u.estado === 'RECHAZADO').length;
+        document.getElementById('metVentas').textContent =
+            todosLosUsuarios.length;
+    }
+
+    function filtrarUsuarios(estado, tab) {
+        filtroActual = estado;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        renderizarUsuarios(estado);
+    }
+
+    function renderizarUsuarios(estado) {
+        const lista = document.getElementById('listaUsuarios');
+        const usuarios = estado === 'TODOS'
+            ? todosLosUsuarios
+            : todosLosUsuarios.filter(u => u.estado === estado);
+
+        if (usuarios.length === 0) {
+            lista.innerHTML = '<div class="empty">No hay usuarios en este estado.</div>';
+            return;
+        }
+
+        lista.innerHTML = usuarios.map(u => `
+                <div class="usuario-row">
+                    <span class="usuario-nombre">${u.nombre}</span>
+                    <span class="usuario-cedula">${u.cedula}</span>
+                    <span class="badge badge-${u.estado.toLowerCase()}">${u.estado}</span>
+                    <div class="acciones">
+                        ${u.estado === 'PENDIENTE' ? `
+                            <button class="btn btn-aprobar" onclick="aprobar(${u.id})">Aprobar</button>
+                            <button class="btn btn-rechazar" onclick="rechazar(${u.id})">Rechazar</button>
+                        ` : ''}
+                        ${u.estado === 'ACTIVO' ? `
+                            <button class="btn btn-desactivar" onclick="cambiarEstado(${u.id}, 'RECHAZADO')">Desactivar</button>
+                        ` : ''}
+                        ${u.estado === 'RECHAZADO' ? `
+                            <button class="btn btn-aprobar" onclick="aprobar(${u.id})">Activar</button>
+                        ` : ''}
+                    </div>
+                </div>`).join('');
+    }
+
+    async function aprobar(id) {
+        await cambiarEstado(id, 'ACTIVO');
+    }
+
+    async function rechazar(id) {
+        await cambiarEstado(id, 'RECHAZADO');
+    }
+
+    async function cambiarEstado(id, estado) {
+        try {
+            const response = await fetch(`/api/v1/admin/usuarios/${id}/estado`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ estado })
+            });
+
+            if (response.ok) {
+                cargarDatos();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function cerrarSesion() {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('cedula');
+        window.location.href = '/login';
+    }
+
+    cargarDatos();
+</script>
+</body>
+</html>

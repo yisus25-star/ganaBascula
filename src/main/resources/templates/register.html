@@ -1,10 +1,231 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma Integral Ganadera — Registro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            background: #e6f4ee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 28px;
+        }
+
+        .logo h1 { font-size: 18px; color: #1F3864; font-weight: 600; }
+        .logo p { font-size: 13px; color: #666; margin-top: 4px; }
+
+        .form-group { margin-bottom: 16px; }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: #444;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus { border-color: #1F3864; }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .upload-area:hover { border-color: #1F3864; }
+        .upload-area p { font-size: 13px; color: #888; margin-top: 8px; }
+        .upload-area .icon { font-size: 24px; }
+
+        .upload-area.has-file {
+            border-color: #0F6E56;
+            background: #f0fff8;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #1F3864;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #162a50; }
+
+        .link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .link a { color: #1F3864; text-decoration: none; font-weight: 500; }
+
+        .alert {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .alert-error { background: #fdecea; color: #c0392b; border-left: 3px solid #c0392b; }
+        .alert-success { background: #e6f4ee; color: #0F6E56; border-left: 3px solid #0F6E56; }
+
+        .required { color: #c0392b; }
+    </style>
 </head>
 <body>
+<div class="card">
+    <div class="logo">
+        <div class="logo-icon">🐄</div>
+        <h1>Plataforma Integral Ganadera</h1>
+        <p>Crea tu cuenta</p>
+    </div>
 
+    <div class="alert alert-error" id="errorMsg"></div>
+    <div class="alert alert-success" id="successMsg"></div>
+
+    <div class="form-group">
+        <label>Nombre completo <span class="required">*</span></label>
+        <input type="text" id="nombre" placeholder="Juan Pérez">
+    </div>
+
+    <div class="form-group">
+        <label>Cédula <span class="required">*</span></label>
+        <input type="text" id="cedula" placeholder="1234567890">
+    </div>
+
+    <div class="form-group">
+        <label>Contraseña <span class="required">*</span></label>
+        <input type="password" id="password" placeholder="Mínimo 8 caracteres">
+    </div>
+
+    <div class="form-group">
+        <label>Certificado ICA <span class="required">*</span></label>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('archivo').click()">
+            <div class="icon">📄</div>
+            <p id="uploadText">Clic para subir PDF o imagen — máx. 5 MB</p>
+        </div>
+        <input type="file" id="archivo" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="archivoSeleccionado()">
+    </div>
+
+    <button class="btn" onclick="registrar()">Registrarse</button>
+
+    <div class="link">
+        ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+    </div>
+</div>
+
+<script>
+    function archivoSeleccionado() {
+        const archivo = document.getElementById('archivo').files[0];
+        if (archivo) {
+            document.getElementById('uploadText').textContent = '✓ ' + archivo.name;
+            document.getElementById('uploadArea').classList.add('has-file');
+        }
+    }
+
+    async function registrar() {
+        const nombre = document.getElementById('nombre').value.trim();
+        const cedula = document.getElementById('cedula').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const archivo = document.getElementById('archivo').files[0];
+
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'none';
+
+        if (!nombre || !cedula || !password) {
+            mostrarError('Por favor completa todos los campos obligatorios.');
+            return;
+        }
+
+        if (password.length < 8) {
+            mostrarError('La contraseña debe tener mínimo 8 caracteres.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/auth/registro', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, cedula, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok || response.status === 201) {
+                mostrarExito('Registro exitoso. Tu cuenta está pendiente de aprobación por el administrador.');
+                setTimeout(() => window.location.href = '/login', 3000);
+            } else {
+                mostrarError(data.message || 'Error al registrarse. Intenta de nuevo.');
+            }
+        } catch (error) {
+            mostrarError('Error de conexión. Verifica que el servidor esté corriendo.');
+        }
+    }
+
+    function mostrarError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+
+    function mostrarExito(msg) {
+        const el = document.getElementById('successMsg');
+        el.textContent = msg;
+        el.style.display = 'block';
+    }
+</script>
 </body>
 </html>

@@ -1,8 +1,9 @@
 package com.ganabascula.service;
 
+import com.ganabascula.dto.response.MetricasAdminResponseDto;
 import com.ganabascula.dto.response.UsuarioResponseDto;
+
 import java.util.List;
-import java.util.Map;
 
 public interface ServiceAdmin {
 
@@ -12,5 +13,5 @@ public interface ServiceAdmin {
 
     UsuarioResponseDto obtenerUsuario(Long id);
 
-    Map<String, Object> obtenerMetricas();
+    MetricasAdminResponseDto obtenerMetricas();
 }

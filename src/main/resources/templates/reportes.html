@@ -1,0 +1,308 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Panel de Reportes</title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            color: #1f2937;
+        }
+
+        .contenedor-metricas {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 28px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .filtros {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="date"] {
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #1d4ed8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        thead {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: center;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Panel de Reportes</h1>
+
+<!-- MÉTRICAS -->
+
+<div class="contenedor-metricas">
+
+    <div class="card">
+        <h3>Total Ventas</h3>
+        <p id="totalVentas">$0</p>
+    </div>
+
+    <div class="card">
+        <h3>Ganancias Totales</h3>
+        <p id="ganancias">$0</p>
+    </div>
+
+    <div class="card">
+        <h3>Reportes Generados</h3>
+        <p id="reportesGenerados">0</p>
+    </div>
+
+</div>
+
+<!-- FILTROS -->
+
+<div class="filtros">
+
+    <label>Fecha Inicio:</label>
+
+    <input type="date" id="fechaInicio">
+
+    <label>Fecha Fin:</label>
+
+    <input type="date" id="fechaFin">
+
+    <button onclick="filtrarReportes()">
+        Filtrar
+    </button>
+
+    <button onclick="generarReporte()">
+        Generar Reporte
+    </button>
+
+</div>
+
+<!-- TABLA -->
+
+<table>
+
+    <thead>
+
+    <tr>
+        <th>ID</th>
+        <th>Fecha</th>
+        <th>Tipo</th>
+        <th>Ventas</th>
+        <th>Ganancia</th>
+        <th>Estado</th>
+    </tr>
+
+    </thead>
+
+    <tbody id="tablaReportes">
+
+    </tbody>
+
+</table>
+
+<script>
+
+    // DATOS TEMPORALES
+    // Más adelante se reemplaza con backend real
+
+    const reportes = [
+
+        {
+            id: 1,
+            fecha: "2026-05-25",
+            tipo: "VENTAS",
+            ventas: 15,
+            ganancia: 350000,
+            estado: "GENERADO"
+        },
+
+        {
+            id: 2,
+            fecha: "2026-05-24",
+            tipo: "GANANCIAS",
+            ventas: 8,
+            ganancia: 180000,
+            estado: "GENERADO"
+        },
+
+        {
+            id: 3,
+            fecha: "2026-05-23",
+            tipo: "GENERAL",
+            ventas: 20,
+            ganancia: 500000,
+            estado: "GENERADO"
+        }
+
+    ];
+
+    // CARGAR TABLA
+
+    function cargarTabla() {
+
+        const tabla =
+            document.getElementById("tablaReportes");
+
+        tabla.innerHTML = "";
+
+        let totalVentas = 0;
+
+        let totalGanancias = 0;
+
+        reportes.forEach(reporte => {
+
+            totalVentas += reporte.ventas;
+
+            totalGanancias += reporte.ganancia;
+
+            tabla.innerHTML += `
+
+                <tr>
+
+                    <td>${reporte.id}</td>
+
+                    <td>${reporte.fecha}</td>
+
+                    <td>${reporte.tipo}</td>
+
+                    <td>${reporte.ventas}</td>
+
+                    <td>$${reporte.ganancia}</td>
+
+                    <td>${reporte.estado}</td>
+
+                </tr>
+
+            `;
+        });
+
+        document.getElementById("totalVentas")
+            .innerText = totalVentas;
+
+        document.getElementById("ganancias")
+            .innerText = "$" + totalGanancias;
+
+        document.getElementById("reportesGenerados")
+            .innerText = reportes.length;
+    }
+
+    // FILTRAR
+
+    function filtrarReportes() {
+
+        const inicio =
+            document.getElementById("fechaInicio").value;
+
+        const fin =
+            document.getElementById("fechaFin").value;
+
+        alert(
+            "Filtro aplicado desde "
+            + inicio +
+            " hasta " +
+            fin
+        );
+    }
+
+    // GENERAR REPORTE
+
+    function generarReporte() {
+
+        alert("Reporte generado correctamente");
+    }
+
+    // INICIAR
+
+    cargarTabla();
+
+</script>
+
+</body>
+
+</html>
+```

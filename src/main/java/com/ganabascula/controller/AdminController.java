@@ -36,4 +36,9 @@ public class AdminController {
         return ResponseEntity.ok(
                 serviceAdmin.cambiarEstado(id, body.get("estado")));
     }
+
+    @GetMapping("/metricas")
+    public ResponseEntity<Map<String, Object>> obtenerMetricas() {
+        return ResponseEntity.ok(serviceAdmin.obtenerMetricas());
+    }
 }

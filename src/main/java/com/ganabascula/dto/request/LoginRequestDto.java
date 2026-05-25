@@ -1,14 +1,17 @@
 package com.ganabascula.dto.request;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-@Getter
-@Setter
+import lombok.Data;
+
+@Data
 public class LoginRequestDto {
 
+    @NotBlank(message = "La cédula es obligatoria")
     private String cedula;
 
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6, message = "La contraseña debe tener mínimo 6 caracteres")
     private String password;
-
 }

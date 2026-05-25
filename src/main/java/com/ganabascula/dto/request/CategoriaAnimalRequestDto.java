@@ -1,14 +1,15 @@
 package com.ganabascula.dto.request;
 
 import com.ganabascula.entity.CategoriaAnimal.TipoAnimal;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Getter;
-import lombok.Setter;
+
+import lombok.Data;
+
 import java.math.BigDecimal;
 
-@Getter
-@Setter
+@Data
 public class CategoriaAnimalRequestDto {
 
     @NotNull(message = "El tipo de animal es obligatorio")

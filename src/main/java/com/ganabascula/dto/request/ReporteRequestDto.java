@@ -1,12 +1,12 @@
 package com.ganabascula.dto.request;
 
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+
+import lombok.Data;
+
 import java.time.LocalDate;
 
-@Getter
-@Setter
+@Data
 public class ReporteRequestDto {
 
     @NotNull(message = "La fecha de inicio es obligatoria")

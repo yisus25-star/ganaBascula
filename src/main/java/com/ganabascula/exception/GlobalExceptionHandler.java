@@ -1,10 +1,15 @@
 package com.ganabascula.exception;
 
-import com.ganabascula.dto.response.ErrorResponse;
+import com.ganabascula.dto.response.ApiResponse;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -12,66 +17,127 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(
+    public ResponseEntity<ApiResponse<String>>
+    handleRuntimeException(
             RuntimeException ex
     ) {
 
-        ErrorResponse error = new ErrorResponse(
-                ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value()
-        );
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
 
-        return new ResponseEntity<>(
-                error,
-                HttpStatus.BAD_REQUEST
-        );
+                .body(
+
+                        new ApiResponse<>(
+
+                                ex.getMessage(),
+
+                                null
+                        )
+                );
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUsernameNotFound(
+    public ResponseEntity<ApiResponse<String>>
+    handleUsernameNotFound(
             UsernameNotFoundException ex
     ) {
 
-        ErrorResponse error = new ErrorResponse(
-                ex.getMessage(),
-                HttpStatus.NOT_FOUND.value()
-        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
 
-        return new ResponseEntity<>(
-                error,
-                HttpStatus.NOT_FOUND
-        );
+                .body(
+
+                        new ApiResponse<>(
+
+                                ex.getMessage(),
+
+                                null
+                        )
+                );
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentials(
+    public ResponseEntity<ApiResponse<String>>
+    handleBadCredentials(
             BadCredentialsException ex
     ) {
 
-        ErrorResponse error = new ErrorResponse(
-                "Credenciales incorrectas",
-                HttpStatus.UNAUTHORIZED.value()
-        );
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
 
-        return new ResponseEntity<>(
-                error,
-                HttpStatus.UNAUTHORIZED
-        );
+                .body(
+
+                        new ApiResponse<>(
+
+                                "Credenciales incorrectas",
+
+                                null
+                        )
+                );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<String>>
+    handleValidationExceptions(
+            MethodArgumentNotValidException ex
+    ) {
+
+        String mensaje = ex
+                .getBindingResult()
+                .getFieldError()
+                .getDefaultMessage();
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+
+                .body(
+
+                        new ApiResponse<>(
+
+                                mensaje,
+
+                                null
+                        )
+                );
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<String>>
+    handleIllegalArgument(
+            IllegalArgumentException ex
+    ) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+
+                .body(
+
+                        new ApiResponse<>(
+
+                                ex.getMessage(),
+
+                                null
+                        )
+                );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneralException(
+    public ResponseEntity<ApiResponse<String>>
+    handleGeneralException(
             Exception ex
     ) {
 
-        ErrorResponse error = new ErrorResponse(
-                "Error interno del servidor",
-                HttpStatus.INTERNAL_SERVER_ERROR.value()
-        );
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
 
-        return new ResponseEntity<>(
-                error,
-                HttpStatus.INTERNAL_SERVER_ERROR
-        );
+                .body(
+
+                        new ApiResponse<>(
+
+                                "Error interno del servidor",
+
+                                null
+                        )
+                );
     }
 }

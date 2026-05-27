@@ -1,12 +1,15 @@
 package com.ganabascula.mapper;
 
 import com.ganabascula.dto.request.TransaccionRequestDto;
+
 import com.ganabascula.dto.response.CategoriaAnimalResponseDto;
 import com.ganabascula.dto.response.GastoAdicionalResponseDto;
 import com.ganabascula.dto.response.TransaccionResponseDto;
-import com.ganabascula.entity.CategoriaAnimal;
+
+import com.ganabascula.entity.DetalleTransaccionAnimal;
 import com.ganabascula.entity.GastoAdicional;
 import com.ganabascula.entity.Transaccion;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -19,13 +22,23 @@ public interface TransaccionMapper {
     @Mapping(target = "totalBruto", ignore = true)
     @Mapping(target = "totalNeto", ignore = true)
     @Mapping(target = "fechaRegistro", ignore = true)
-    @Mapping(target = "categorias", ignore = true)
+    @Mapping(target = "detalles", ignore = true)
     @Mapping(target = "gastos", ignore = true)
-    Transaccion toEntity(TransaccionRequestDto dto);
+    Transaccion toEntity(
+            TransaccionRequestDto dto
+    );
 
-    TransaccionResponseDto toDto(Transaccion transaccion);
+    @Mapping(target = "categorias", source = "detalles")
+    @Mapping(target = "gastos", source = "gastos")
+    TransaccionResponseDto toDto(
+            Transaccion transaccion
+    );
 
-    CategoriaAnimalResponseDto categoriaToDto(CategoriaAnimal categoria);
+    CategoriaAnimalResponseDto detalleToDto(
+            DetalleTransaccionAnimal detalle
+    );
 
-    GastoAdicionalResponseDto gastoToDto(GastoAdicional gasto);
+    GastoAdicionalResponseDto gastoToDto(
+            GastoAdicional gasto
+    );
 }

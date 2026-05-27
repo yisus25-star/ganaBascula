@@ -1,6 +1,6 @@
 package com.ganabascula.dto.response;
 
-import com.ganabascula.entity.CategoriaAnimal.TipoAnimal;
+import com.ganabascula.entity.TipoAnimal;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;

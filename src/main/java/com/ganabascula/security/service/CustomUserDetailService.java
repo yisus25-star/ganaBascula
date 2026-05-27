@@ -2,45 +2,68 @@ package com.ganabascula.security.service;
 
 import com.ganabascula.entity.Usuario;
 import com.ganabascula.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
-public class CustomUserDetailService implements UserDetailsService {
+@RequiredArgsConstructor
+public class CustomUserDetailService
+        implements UserDetailsService {
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String cedula)
-            throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(
+            String cedula
+    ) throws UsernameNotFoundException {
 
-        Usuario usuario = usuarioRepository.findByCedula(cedula)
+        Usuario usuario = usuarioRepository
+                .findByCedula(cedula)
+
                 .orElseThrow(() ->
                         new UsernameNotFoundException(
                                 "Usuario no encontrado"
-                        ));
+                        )
+                );
 
-        // Validar que el usuario esté ACTIVO
-        if (usuario.getEstado() != Usuario.EstadoUsuario.ACTIVO) {
+        // VALIDAR QUE EL USUARIO ESTÉ ACTIVO
+        if (
+                usuario.getEstado()
+                        != Usuario.EstadoUsuario.ACTIVO
+        ) {
+
             throw new UsernameNotFoundException(
-                    "Tu cuenta está " + usuario.getEstado().name().toLowerCase()
+                    "Tu cuenta está "
+                            + usuario.getEstado()
+                            .name()
+                            .toLowerCase()
                             + ". Contacta al administrador."
             );
         }
 
+        // RETORNAR USUARIO AUTENTICADO
         return new User(
+
                 usuario.getCedula(),
+
                 usuario.getPassword(),
+
                 List.of(
                         new SimpleGrantedAuthority(
-                                usuario.getRol().getNombre()
+                                usuario.getRol()
+                                        .getNombre()
                         )
                 )
         );

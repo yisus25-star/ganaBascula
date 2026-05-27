@@ -4,207 +4,520 @@ import com.ganabascula.dto.request.CategoriaAnimalRequestDto;
 import com.ganabascula.dto.request.GastoAdicionalRequestDto;
 import com.ganabascula.dto.request.TransaccionRequestDto;
 import com.ganabascula.dto.response.TransaccionResponseDto;
-import com.ganabascula.entity.*;
-import com.ganabascula.entity.CategoriaAnimal.TipoAnimal;
+
+import com.ganabascula.entity.DetalleTransaccionAnimal;
+import com.ganabascula.entity.GastoAdicional;
+import com.ganabascula.entity.Transaccion;
+import com.ganabascula.entity.Usuario;
+
 import com.ganabascula.entity.Transaccion.EstadoTransaccion;
+
 import com.ganabascula.mapper.TransaccionMapper;
-import com.ganabascula.repository.*;
+
+import com.ganabascula.repository.DetalleTransaccionAnimalRepository;
+import com.ganabascula.repository.GastoAdicionalRepository;
+import com.ganabascula.repository.TransaccionRepository;
+import com.ganabascula.repository.UsuarioRepository;
+
+import com.ganabascula.service.CalculoGanaderoService;
 import com.ganabascula.service.ServiceTransaccion;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ServiceTransaccionImpl implements ServiceTransaccion {
+public class ServiceTransaccionImpl
+        implements ServiceTransaccion {
 
-    private static final BigDecimal BONO_POR_ANIMAL = new BigDecimal("42800");
-    private static final BigDecimal DESTARE_MACHOS = new BigDecimal("0.05");
-    private static final BigDecimal DESTARE_HEMBRAS = new BigDecimal("0.06");
+    private final TransaccionRepository
+            transaccionRepository;
 
-    private final TransaccionRepository transaccionRepository;
-    private final CategoriaAnimalRepository categoriaAnimalRepository;
-    private final GastoAdicionalRepository gastoAdicionalRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final TransaccionMapper transaccionMapper;
+    private final DetalleTransaccionAnimalRepository
+            detalleTransaccionAnimalRepository;
+
+    private final GastoAdicionalRepository
+            gastoAdicionalRepository;
+
+    private final UsuarioRepository
+            usuarioRepository;
+
+    private final TransaccionMapper
+            transaccionMapper;
+
+    private final CalculoGanaderoService
+            calculoGanaderoService;
 
     public ServiceTransaccionImpl(
-            TransaccionRepository transaccionRepository,
-            CategoriaAnimalRepository categoriaAnimalRepository,
-            GastoAdicionalRepository gastoAdicionalRepository,
-            UsuarioRepository usuarioRepository,
-            TransaccionMapper transaccionMapper) {
-        this.transaccionRepository = transaccionRepository;
-        this.categoriaAnimalRepository = categoriaAnimalRepository;
-        this.gastoAdicionalRepository = gastoAdicionalRepository;
-        this.usuarioRepository = usuarioRepository;
-        this.transaccionMapper = transaccionMapper;
+
+            TransaccionRepository
+                    transaccionRepository,
+
+            DetalleTransaccionAnimalRepository
+                    detalleTransaccionAnimalRepository,
+
+            GastoAdicionalRepository
+                    gastoAdicionalRepository,
+
+            UsuarioRepository
+                    usuarioRepository,
+
+            TransaccionMapper
+                    transaccionMapper,
+
+            CalculoGanaderoService
+                    calculoGanaderoService
+    ) {
+
+        this.transaccionRepository =
+                transaccionRepository;
+
+        this.detalleTransaccionAnimalRepository =
+                detalleTransaccionAnimalRepository;
+
+        this.gastoAdicionalRepository =
+                gastoAdicionalRepository;
+
+        this.usuarioRepository =
+                usuarioRepository;
+
+        this.transaccionMapper =
+                transaccionMapper;
+
+        this.calculoGanaderoService =
+                calculoGanaderoService;
     }
 
     @Override
     @Transactional
-    public TransaccionResponseDto crearTransaccion(TransaccionRequestDto dto, String cedula) {
-        Usuario usuario = usuarioRepository.findByCedula(cedula)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    public TransaccionResponseDto crearTransaccion(
+            TransaccionRequestDto dto,
+            String cedula
+    ) {
 
-        Transaccion transaccion = transaccionMapper.toEntity(dto);
+        Usuario usuario = usuarioRepository
+                .findByCedula(cedula)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Usuario no encontrado"
+                        )
+                );
+
+        Transaccion transaccion =
+                transaccionMapper.toEntity(dto);
+
         transaccion.setUsuario(usuario);
-        transaccion.setEstado(EstadoTransaccion.BORRADOR);
 
-        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
+        transaccion.setEstado(
+                EstadoTransaccion.BORRADOR
+        );
+
+        Transaccion transaccionGuardada =
+                transaccionRepository.save(
+                        transaccion
+                );
+
+        return transaccionMapper.toDto(
+                transaccionGuardada
+        );
     }
 
     @Override
     @Transactional
-    public TransaccionResponseDto agregarCategoria(Long transaccionId, CategoriaAnimalRequestDto dto, String cedula) {
-        Transaccion transaccion = obtenerTransaccionValidada(transaccionId, cedula);
+    public TransaccionResponseDto agregarCategoria(
+            Long transaccionId,
+            CategoriaAnimalRequestDto dto,
+            String cedula
+    ) {
 
-        if (transaccion.getEstado() == EstadoTransaccion.COMPLETADA) {
-            throw new RuntimeException("No se puede modificar una transaccion completada");
-        }
+        Transaccion transaccion =
+                obtenerTransaccionValidada(
+                        transaccionId,
+                        cedula
+                );
 
-        CategoriaAnimal categoria = new CategoriaAnimal();
-        categoria.setTransaccion(transaccion);
-        categoria.setTipo(dto.getTipo());
-        categoria.setCantidad(dto.getCantidad());
-        categoria.setPesoBrutoKg(dto.getPesoBrutoKg());
-        categoria.setPrecioPorKilo(dto.getPrecioPorKilo());
-        categoria.setAplicaDestare(dto.getAplicaDestare());
-        categoria.setAplicaBono(dto.getAplicaBono());
+        validarTransaccionEditable(
+                transaccion
+        );
 
-        // Calcular destare
-        BigDecimal porcentajeDestare = BigDecimal.ZERO;
-        if (dto.getAplicaDestare()) {
-            porcentajeDestare = esMacho(dto.getTipo()) ? DESTARE_MACHOS : DESTARE_HEMBRAS;
-        }
-        categoria.setPorcentajeDestare(porcentajeDestare);
+        BigDecimal porcentajeDestare =
+                calculoGanaderoService
+                        .obtenerPorcentajeDestare(
+                                dto.getAplicaDestare(),
+                                dto.getTipo()
+                        );
 
-        // Calcular peso neto
-        BigDecimal pesoNeto = dto.getPesoBrutoKg()
-                .subtract(dto.getPesoBrutoKg().multiply(porcentajeDestare))
-                .setScale(2, RoundingMode.HALF_UP);
-        categoria.setPesoNetoKg(pesoNeto);
+        BigDecimal pesoNeto =
+                calculoGanaderoService
+                        .calcularPesoNeto(
+                                dto.getPesoBrutoKg(),
+                                porcentajeDestare
+                        );
 
-        // Calcular bono
-        BigDecimal valorBono = BigDecimal.ZERO;
-        if (dto.getAplicaBono()) {
-            valorBono = BONO_POR_ANIMAL.multiply(new BigDecimal(dto.getCantidad()));
-        }
-        categoria.setValorBono(valorBono);
+        BigDecimal valorBono =
+                calculoGanaderoService
+                        .calcularBono(
+                                dto.getAplicaBono(),
+                                dto.getCantidad()
+                        );
 
-        // Calcular valor categoria
-        BigDecimal valorCategoria = pesoNeto
-                .multiply(dto.getPrecioPorKilo())
-                .subtract(valorBono)
-                .setScale(2, RoundingMode.HALF_UP);
-        categoria.setValorCategoria(valorCategoria);
+        BigDecimal subtotal =
+                calculoGanaderoService
+                        .calcularSubtotal(
+                                pesoNeto,
+                                dto.getPrecioPorKilo(),
+                                valorBono
+                        );
 
-        categoriaAnimalRepository.save(categoria);
-        recalcularTotales(transaccion);
+        DetalleTransaccionAnimal detalle =
+                new DetalleTransaccionAnimal();
 
-        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
+        detalle.setTransaccion(
+                transaccion
+        );
+
+        detalle.setTipo(
+                dto.getTipo()
+        );
+
+        detalle.setCantidad(
+                dto.getCantidad()
+        );
+
+        detalle.setPesoBrutoKg(
+                dto.getPesoBrutoKg()
+        );
+
+        detalle.setAplicaDestare(
+                dto.getAplicaDestare()
+        );
+
+        detalle.setPorcentajeDestare(
+                porcentajeDestare
+        );
+
+        detalle.setPesoNetoKg(
+                pesoNeto
+        );
+
+        detalle.setPrecioPorKilo(
+                dto.getPrecioPorKilo()
+        );
+
+        detalle.setAplicaBono(
+                dto.getAplicaBono()
+        );
+
+        detalle.setValorBono(
+                valorBono
+        );
+
+        detalle.setSubtotal(
+                subtotal
+        );
+
+        transaccion.getDetalles()
+                .add(detalle);
+
+        detalleTransaccionAnimalRepository
+                .save(detalle);
+
+        recalcularTotales(
+                transaccion
+        );
+
+        transaccionRepository.save(
+                transaccion
+        );
+
+        Transaccion transaccionActualizada =
+                transaccionRepository.findById(
+                        transaccion.getId()
+                ).orElseThrow();
+
+        return transaccionMapper.toDto(
+                transaccionActualizada
+        );
     }
 
     @Override
     @Transactional
-    public TransaccionResponseDto agregarGasto(Long transaccionId, GastoAdicionalRequestDto dto, String cedula) {
-        Transaccion transaccion = obtenerTransaccionValidada(transaccionId, cedula);
+    public TransaccionResponseDto agregarGasto(
+            Long transaccionId,
+            GastoAdicionalRequestDto dto,
+            String cedula
+    ) {
 
-        if (transaccion.getEstado() == EstadoTransaccion.COMPLETADA) {
-            throw new RuntimeException("No se puede modificar una transaccion completada");
-        }
+        Transaccion transaccion =
+                obtenerTransaccionValidada(
+                        transaccionId,
+                        cedula
+                );
 
-        GastoAdicional gasto = new GastoAdicional();
-        gasto.setTransaccion(transaccion);
-        gasto.setTipo(dto.getTipo());
-        gasto.setDescripcion(dto.getDescripcion());
-        gasto.setValor(dto.getValor());
-        gasto.setAplica(true);
+        validarTransaccionEditable(
+                transaccion
+        );
 
-        gastoAdicionalRepository.save(gasto);
-        recalcularTotales(transaccion);
+        GastoAdicional gasto =
+                new GastoAdicional();
 
-        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
+        gasto.setTransaccion(
+                transaccion
+        );
+
+        gasto.setTipo(
+                dto.getTipo()
+        );
+
+        gasto.setDescripcion(
+                dto.getDescripcion()
+        );
+
+        gasto.setValor(
+                dto.getValor()
+        );
+
+        gasto.setAplica(
+                dto.getAplica()
+        );
+
+        transaccion.getGastos()
+                .add(gasto);
+
+        gastoAdicionalRepository.save(
+                gasto
+        );
+
+        recalcularTotales(
+                transaccion
+        );
+
+        transaccionRepository.save(
+                transaccion
+        );
+
+        Transaccion transaccionActualizada =
+                transaccionRepository.findById(
+                        transaccion.getId()
+                ).orElseThrow();
+
+        return transaccionMapper.toDto(
+                transaccionActualizada
+        );
     }
 
     @Override
     @Transactional
-    public TransaccionResponseDto completarTransaccion(Long transaccionId, String cedula) {
-        Transaccion transaccion = obtenerTransaccionValidada(transaccionId, cedula);
+    public TransaccionResponseDto completarTransaccion(
+            Long transaccionId,
+            String cedula
+    ) {
 
-        if (transaccion.getCategorias().isEmpty()) {
-            throw new RuntimeException("La transaccion debe tener al menos una categoria");
+        Transaccion transaccion =
+                obtenerTransaccionValidada(
+                        transaccionId,
+                        cedula
+                );
+
+        if (
+                transaccion.getDetalles()
+                        .isEmpty()
+        ) {
+
+            throw new RuntimeException(
+                    "La transaccion debe tener al menos un detalle animal"
+            );
         }
 
-        transaccion.setEstado(EstadoTransaccion.COMPLETADA);
-        return transaccionMapper.toDto(transaccionRepository.save(transaccion));
+        transaccion.setEstado(
+                EstadoTransaccion.COMPLETADA
+        );
+
+        Transaccion transaccionCompletada =
+                transaccionRepository.save(
+                        transaccion
+                );
+
+        return transaccionMapper.toDto(
+                transaccionCompletada
+        );
     }
 
     @Override
-    public TransaccionResponseDto obtenerTransaccion(Long transaccionId, String cedula) {
-        return transaccionMapper.toDto(obtenerTransaccionValidada(transaccionId, cedula));
+    public TransaccionResponseDto obtenerTransaccion(
+            Long transaccionId,
+            String cedula
+    ) {
+
+        Transaccion transaccion =
+                obtenerTransaccionValidada(
+                        transaccionId,
+                        cedula
+                );
+
+        return transaccionMapper.toDto(
+                transaccion
+        );
     }
 
     @Override
-    public List<TransaccionResponseDto> listarTransacciones(String cedula) {
-        Usuario usuario = usuarioRepository.findByCedula(cedula)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return transaccionRepository.findByUsuario(usuario)
-                .stream().map(transaccionMapper::toDto).collect(Collectors.toList());
+    public List<TransaccionResponseDto>
+    listarTransacciones(
+            String cedula
+    ) {
+
+        Usuario usuario = usuarioRepository
+                .findByCedula(cedula)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Usuario no encontrado"
+                        )
+                );
+
+        return transaccionRepository
+                .findByUsuario(usuario)
+                .stream()
+                .map(transaccionMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<TransaccionResponseDto> filtrarPorFecha(String cedula, String fechaInicio, String fechaFin) {
-        Usuario usuario = usuarioRepository.findByCedula(cedula)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return transaccionRepository.findByUsuarioAndFechaBetween(
+    public List<TransaccionResponseDto>
+    filtrarPorFecha(
+            String cedula,
+            String fechaInicio,
+            String fechaFin
+    ) {
+
+        Usuario usuario = usuarioRepository
+                .findByCedula(cedula)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Usuario no encontrado"
+                        )
+                );
+
+        return transaccionRepository
+                .findByUsuarioAndFechaBetween(
                         usuario,
                         LocalDate.parse(fechaInicio),
-                        LocalDate.parse(fechaFin))
-                .stream().map(transaccionMapper::toDto).collect(Collectors.toList());
+                        LocalDate.parse(fechaFin)
+                )
+                .stream()
+                .map(transaccionMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<TransaccionResponseDto> filtrarPorComprador(String cedula, String nombreComprador) {
-        Usuario usuario = usuarioRepository.findByCedula(cedula)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return transaccionRepository.findByUsuarioAndNombreCompradorContainingIgnoreCase(
-                        usuario, nombreComprador)
-                .stream().map(transaccionMapper::toDto).collect(Collectors.toList());
+    public List<TransaccionResponseDto>
+    filtrarPorComprador(
+            String cedula,
+            String nombreComprador
+    ) {
+
+        Usuario usuario = usuarioRepository
+                .findByCedula(cedula)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Usuario no encontrado"
+                        )
+                );
+
+        return transaccionRepository
+                .findByUsuarioAndNombreCompradorContainingIgnoreCase(
+                        usuario,
+                        nombreComprador
+                )
+                .stream()
+                .map(transaccionMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    private boolean esMacho(TipoAnimal tipo) {
-        return tipo == TipoAnimal.BECERRO
-                || tipo == TipoAnimal.NOVILLO
-                || tipo == TipoAnimal.TORO;
+    private void recalcularTotales(
+            Transaccion transaccion
+    ) {
+
+        BigDecimal totalBruto =
+                transaccion.getDetalles()
+                        .stream()
+                        .map(
+                                DetalleTransaccionAnimal
+                                        ::getSubtotal
+                        )
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        BigDecimal totalGastos =
+                transaccion.getGastos()
+                        .stream()
+                        .filter(
+                                GastoAdicional
+                                        ::getAplica
+                        )
+                        .map(
+                                GastoAdicional
+                                        ::getValor
+                        )
+                        .reduce(
+                                BigDecimal.ZERO,
+                                BigDecimal::add
+                        );
+
+        transaccion.setTotalBruto(
+                totalBruto
+        );
+
+        transaccion.setTotalNeto(
+                totalBruto.subtract(totalGastos)
+        );
     }
 
-    private void recalcularTotales(Transaccion transaccion) {
-        BigDecimal totalBruto = transaccion.getCategorias().stream()
-                .map(CategoriaAnimal::getValorCategoria)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    private Transaccion obtenerTransaccionValidada(
+            Long transaccionId,
+            String cedula
+    ) {
 
-        BigDecimal totalGastos = transaccion.getGastos().stream()
-                .filter(GastoAdicional::getAplica)
-                .map(GastoAdicional::getValor)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        Transaccion transaccion =
+                transaccionRepository.findById(
+                        transaccionId
+                ).orElseThrow(() ->
+                        new RuntimeException(
+                                "Transaccion no encontrada"
+                        )
+                );
 
-        transaccion.setTotalBruto(totalBruto);
-        transaccion.setTotalNeto(totalBruto.subtract(totalGastos));
-    }
+        if (
+                !transaccion.getUsuario()
+                        .getCedula()
+                        .equals(cedula)
+        ) {
 
-    private Transaccion obtenerTransaccionValidada(Long transaccionId, String cedula) {
-        Transaccion transaccion = transaccionRepository.findById(transaccionId)
-                .orElseThrow(() -> new RuntimeException("Transaccion no encontrada"));
-
-        if (!transaccion.getUsuario().getCedula().equals(cedula)) {
-            throw new RuntimeException("No tienes permiso para acceder a esta transaccion");
+            throw new RuntimeException(
+                    "No tienes permiso para acceder a esta transaccion"
+            );
         }
 
         return transaccion;
+    }
+
+    private void validarTransaccionEditable(
+            Transaccion transaccion
+    ) {
+
+        if (
+                transaccion.getEstado()
+                        == EstadoTransaccion.COMPLETADA
+        ) {
+
+            throw new RuntimeException(
+                    "No se puede modificar una transaccion completada"
+            );
+        }
     }
 }

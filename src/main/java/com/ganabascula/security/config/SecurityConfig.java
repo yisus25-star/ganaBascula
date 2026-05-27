@@ -2,7 +2,9 @@ package com.ganabascula.security.config;
 
 import com.ganabascula.security.jwt.JwtAuthenticationFilter;
 import com.ganabascula.security.service.CustomUserDetailService;
+
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,12 +31,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationFilter
+            jwtAuthenticationFilter;
 
-    private final CustomUserDetailService customUserDetailService;
+    private final CustomUserDetailService
+            customUserDetailService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+
         return new BCryptPasswordEncoder();
     }
 
@@ -50,9 +55,13 @@ public class SecurityConfig {
     public DaoAuthenticationProvider authenticationProvider() {
 
         DaoAuthenticationProvider authProvider =
-                new DaoAuthenticationProvider(customUserDetailService);
+                new DaoAuthenticationProvider(
+                        customUserDetailService
+                );
 
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(
+                passwordEncoder()
+        );
 
         return authProvider;
     }
@@ -83,7 +92,10 @@ public class SecurityConfig {
 
                         .requestMatchers(
 
-                                // HTML
+                                "/",
+                                "/index",
+                                "/index.html",
+
                                 "/login",
                                 "/register",
                                 "/dashboard",
@@ -91,38 +103,45 @@ public class SecurityConfig {
                                 "/historial",
                                 "/admin",
 
-                                // Auth
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/registro",
 
                                 "/usuarios/login",
                                 "/usuarios/registro",
 
-                                // Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
 
-                                // Static
                                 "/css/**",
                                 "/js/**",
+                                "/images/**",
+
                                 "/error"
 
                         ).permitAll()
 
-                        .requestMatchers("/admin/**", "/api/v1/admin/**")
+                        .requestMatchers(
+                                "/admin/**",
+                                "/api/v1/admin/**"
+                        )
                         .hasRole("ADMIN")
 
                         .requestMatchers("/ganadero/**")
-                        .hasAnyRole("GANADERO", "ADMIN")
+                        .hasAnyRole(
+                                "GANADERO",
+                                "ADMIN"
+                        )
 
                         .anyRequest()
                         .authenticated()
                 )
 
-                .authenticationProvider(authenticationProvider())
+                .authenticationProvider(
+                        authenticationProvider()
+                )
 
                 .addFilterBefore(
                         jwtAuthenticationFilter,

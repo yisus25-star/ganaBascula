@@ -1,6 +1,6 @@
 package com.ganabascula.dto.request;
 
-import com.ganabascula.entity.CategoriaAnimal.TipoAnimal;
+import com.ganabascula.entity.TipoAnimal;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

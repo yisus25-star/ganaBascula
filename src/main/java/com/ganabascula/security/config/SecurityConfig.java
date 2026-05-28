@@ -72,6 +72,7 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
+
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .sessionManagement(session ->
@@ -90,6 +91,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // RUTAS PUBLICAS
                         .requestMatchers(
 
                                 "/",
@@ -98,10 +100,6 @@ public class SecurityConfig {
 
                                 "/login",
                                 "/register",
-                                "/dashboard",
-                                "/ventas",
-                                "/historial",
-                                "/admin",
 
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/registro",
@@ -123,17 +121,30 @@ public class SecurityConfig {
 
                         ).permitAll()
 
+                        // ADMIN
                         .requestMatchers(
                                 "/admin/**",
                                 "/api/v1/admin/**"
                         )
                         .hasRole("ADMIN")
 
-                        .requestMatchers("/ganadero/**")
+                        // GANADERO Y ADMIN
+                        .requestMatchers(
+                                "/dashboard",
+                                "/ventas",
+                                "/historial",
+                                "/ganadero/**",
+
+                                "/api/v1/transacciones/**",
+                                "/api/v1/documentos-ica/**",
+                                "/api/dashboard/**"
+
+                        )
                         .hasAnyRole(
                                 "GANADERO",
                                 "ADMIN"
                         )
+
 
                         .anyRequest()
                         .authenticated()

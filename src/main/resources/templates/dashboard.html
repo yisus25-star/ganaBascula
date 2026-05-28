@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma Integral Ganadera — Menú principal</title>
+    <title>Plataforma Integral Ganadera — Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -52,7 +52,7 @@
         .btn-logout:hover { background: rgba(255,255,255,0.1); }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 32px 20px;
         }
@@ -64,6 +64,65 @@
         .welcome h2 { font-size: 20px; color: #1F3864; }
         .welcome p { font-size: 14px; color: #666; margin-top: 4px; }
 
+        /* Dashboard financiero — solo visible para ADMIN */
+        .dashboard-financiero {
+            display: none;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-financiero h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1F3864;
+            margin-bottom: 14px;
+        }
+
+        .metricas-financieras {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .metrica-fin {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .metrica-fin .valor {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1F3864;
+            margin-bottom: 4px;
+        }
+
+        .metrica-fin .etiqueta {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .metrica-fin.ingresos .valor { color: #0F6E56; }
+        .metrica-fin.gastos .valor { color: #c0392b; }
+        .metrica-fin.utilidad .valor { color: #1F3864; }
+
+        .btn-admin {
+            background: #1F3864;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-admin:hover { background: #162a50; }
+
+        /* Módulos */
         .grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -79,9 +138,7 @@
             border: 2px solid transparent;
         }
 
-        .module-card.active {
-            border-color: #0F6E56;
-        }
+        .module-card.active { border-color: #0F6E56; }
 
         .module-card.active:hover {
             transform: translateY(-2px);
@@ -120,14 +177,14 @@
 
         .badge-active { background: #e6f4ee; color: #0F6E56; }
         .badge-soon { background: #f0f4f8; color: #888; }
+        .badge-admin { background: #1F3864; color: white; }
 
-        .module-full {
-            grid-column: 1 / -1;
-        }
+        .module-full { grid-column: 1 / -1; }
 
         @media (max-width: 500px) {
             .grid { grid-template-columns: 1fr; }
             .module-full { grid-column: 1; }
+            .metricas-financieras { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -145,22 +202,64 @@
 </header>
 
 <div class="container">
+
     <div class="welcome">
-        <h2>Selecciona un módulo</h2>
-        <p>Elige la funcionalidad que deseas usar</p>
+        <h2 id="tituloWelcome">Selecciona un módulo</h2>
+        <p id="subtituloWelcome">Elige la funcionalidad que deseas usar</p>
     </div>
 
-    <div class="grid">
+    <!-- Dashboard financiero — solo visible para ADMIN -->
+    <div class="dashboard-financiero" id="dashboardFinanciero">
+        <h3>📊 Resumen financiero del sistema</h3>
+        <div class="metricas-financieras">
+            <div class="metrica-fin ingresos">
+                <div class="valor" id="ingresosTotales">...</div>
+                <div class="etiqueta">Ingresos totales</div>
+            </div>
+            <div class="metrica-fin gastos">
+                <div class="valor" id="gastosTotales">...</div>
+                <div class="etiqueta">Gastos totales</div>
+            </div>
+            <div class="metrica-fin utilidad">
+                <div class="valor" id="utilidadNeta">...</div>
+                <div class="etiqueta">Utilidad neta</div>
+            </div>
+            <div class="metrica-fin">
+                <div class="valor" id="cantidadVentas">...</div>
+                <div class="etiqueta">Total ventas</div>
+            </div>
+            <div class="metrica-fin">
+                <div class="valor" id="usuariosRegistrados">...</div>
+                <div class="etiqueta">Usuarios registrados</div>
+            </div>
+            <div class="metrica-fin ingresos">
+                <div class="valor" id="ventasMes">...</div>
+                <div class="etiqueta">Ventas del mes</div>
+            </div>
+        </div>
+        <button class="btn-admin" onclick="window.location.href='/admin'">
+            Gestionar ganaderos
+        </button>
+    </div>
+
+    <!-- Módulos -->
+    <div class="grid" id="modulosGrid">
         <div class="module-card active" onclick="window.location.href='/ventas'">
             <div class="module-icon">⚖️</div>
             <h3>Registro de ventas</h3>
             <span class="badge badge-active">Activo</span>
         </div>
 
-        <div class="module-card inactive">
+        <div class="module-card active" onclick="window.location.href='/historial'">
             <div class="module-icon">📋</div>
-            <h3>Inventario propio</h3>
-            <span class="badge badge-soon">Próximamente</span>
+            <h3>Historial de ventas</h3>
+            <span class="badge badge-active">Activo</span>
+        </div>
+
+        <div class="module-card active" onclick="window.location.href='/reportes'">
+            <div class="module-icon">📊</div>
+            <h3>Reportes</h3>
+            <span class="badge badge-active">Activo</span>
         </div>
 
         <div class="module-card inactive">
@@ -176,30 +275,67 @@
         </div>
 
         <div class="module-card inactive module-full">
-            <div class="module-icon">📊</div>
-            <h3>Reportes financieros</h3>
+            <div class="module-icon">📈</div>
+            <h3>Reportes financieros avanzados</h3>
             <span class="badge badge-soon">Próximamente</span>
         </div>
     </div>
+
 </div>
 
 <script>
-    // Verificar que el usuario esté autenticado
     const token = sessionStorage.getItem('token');
     const cedula = sessionStorage.getItem('cedula');
+    const rol = sessionStorage.getItem('rol');
 
     if (!token) {
         window.location.href = '/login';
     }
 
-    // Mostrar nombre del usuario
-    document.getElementById('userName').textContent = cedula || 'Ganadero';
+    document.getElementById('userName').textContent = cedula || 'Usuario';
+
+    // Si es admin mostrar dashboard financiero
+    if (rol === 'ROLE_ADMIN') {
+        document.getElementById('tituloWelcome').textContent = 'Panel de administración';
+        document.getElementById('subtituloWelcome').textContent = 'Resumen del sistema y acceso a módulos';
+        document.getElementById('dashboardFinanciero').style.display = 'block';
+        cargarDashboard();
+    }
+
+    async function cargarDashboard() {
+        try {
+            const response = await fetch('/api/v1/dashboard', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                const d = result.data;
+
+                document.getElementById('ingresosTotales').textContent =
+                    '$' + Number(d.ingresosTotales || 0).toLocaleString('es-CO');
+                document.getElementById('gastosTotales').textContent =
+                    '$' + Number(d.gastosTotales || 0).toLocaleString('es-CO');
+                document.getElementById('utilidadNeta').textContent =
+                    '$' + Number(d.utilidadNeta || 0).toLocaleString('es-CO');
+                document.getElementById('cantidadVentas').textContent =
+                    d.cantidadVentas || 0;
+                document.getElementById('usuariosRegistrados').textContent =
+                    d.usuariosRegistrados || 0;
+                document.getElementById('ventasMes').textContent =
+                    '$' + Number(d.ventasMes || 0).toLocaleString('es-CO');
+            }
+        } catch (error) {
+            console.error('Error cargando dashboard:', error);
+        }
+    }
 
     function cerrarSesion() {
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('cedula');
+        sessionStorage.removeItem('rol');
         window.location.href = '/login';
     }
 </script>
 </body>
-</html>
+</html>l>

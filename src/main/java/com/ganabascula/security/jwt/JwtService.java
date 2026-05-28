@@ -3,85 +3,148 @@ package com.ganabascula.security.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+
+import io.jsonwebtoken.JwtException;
+
 import io.jsonwebtoken.security.Keys;
+
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+
 import java.util.Date;
+
 import java.util.function.Function;
 
 @Service
 public class JwtService {
 
     private static final String SECRET_KEY =
+
             "8d2f9c1e7a6b4d3f9e2c7a1b5f8d6c3e4a9b7c2d1f5e8a6b3c9d7e1f4a2b6c8";
 
-    public String generarToken(String cedula) {
+    private static final long
+            JWT_EXPIRATION = 1000 * 60 * 60 * 2;
+
+    public String generarToken(
+            String cedula
+    ) {
 
         return Jwts.builder()
 
                 .subject(cedula)
 
-                .issuedAt(new Date())
-
-                .expiration(
-                        new Date(System.currentTimeMillis() + 1000 * 60 * 60)
+                .issuedAt(
+                        new Date()
                 )
 
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .expiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + JWT_EXPIRATION
+                        )
+                )
+
+                .signWith(
+                        getSigningKey(),
+                        SignatureAlgorithm.HS256
+                )
 
                 .compact();
     }
 
-    public String extractCedula(String token) {
+    public String extractCedula(
+            String token
+    ) {
 
-        return extractClaim(token, Claims::getSubject);
+        return extractClaim(
+                token,
+                Claims::getSubject
+        );
     }
 
-    public boolean isTokenValid(String token, String cedula) {
+    public boolean isTokenValid(
+            String token,
+            String cedula
+    ) {
 
-        final String cedulaExtraida = extractCedula(token);
+        try {
 
-        return cedulaExtraida.equals(cedula)
-                && !isTokenExpired(token);
+            final String cedulaExtraida =
+                    extractCedula(token);
+
+            return cedulaExtraida.equals(cedula)
+                    && !isTokenExpired(token);
+
+        } catch (Exception e) {
+
+            return false;
+        }
     }
 
-    private boolean isTokenExpired(String token) {
+    private boolean isTokenExpired(
+            String token
+    ) {
 
-        return extractExpiration(token).before(new Date());
+        return extractExpiration(token)
+                .before(new Date());
     }
 
-    private Date extractExpiration(String token) {
+    private Date extractExpiration(
+            String token
+    ) {
 
-        return extractClaim(token, Claims::getExpiration);
+        return extractClaim(
+                token,
+                Claims::getExpiration
+        );
     }
 
     private <T> T extractClaim(
+
             String token,
-            Function<Claims, T> claimsResolver
+
+            Function<Claims, T>
+                    claimsResolver
     ) {
 
-        final Claims claims = extractAllClaims(token);
+        final Claims claims =
+                extractAllClaims(token);
 
-        return claimsResolver.apply(claims);
+        return claimsResolver
+                .apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(
+            String token
+    ) {
 
-        return Jwts.parser()
+        try {
 
-                .verifyWith(getSigningKey())
+            return Jwts.parser()
 
-                .build()
+                    .verifyWith(
+                            getSigningKey()
+                    )
 
-                .parseSignedClaims(token)
+                    .build()
 
-                .getPayload();
+                    .parseSignedClaims(token)
+
+                    .getPayload();
+
+        } catch (JwtException e) {
+
+            throw new RuntimeException(
+                    "Token JWT inválido o expirado"
+            );
+        }
     }
 
     private SecretKey getSigningKey() {
 
-        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+        return Keys.hmacShaKeyFor(
+                SECRET_KEY.getBytes()
+        );
     }
-
 }

@@ -101,6 +101,12 @@ public class SecurityConfig {
                                 "/login",
                                 "/register",
 
+                                // HTML FRONTEND
+                                "/dashboard",
+                                "/ventas",
+                                "/historial",
+                                "/admin",
+
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/registro",
 
@@ -121,18 +127,15 @@ public class SecurityConfig {
 
                         ).permitAll()
 
-                        // ADMIN
+                        // APIs ADMIN
                         .requestMatchers(
-                                "/admin/**",
                                 "/api/v1/admin/**"
                         )
                         .hasRole("ADMIN")
 
-                        // GANADERO Y ADMIN
+                        // APIs GANADERO Y ADMIN
                         .requestMatchers(
-                                "/dashboard",
-                                "/ventas",
-                                "/historial",
+
                                 "/ganadero/**",
 
                                 "/api/v1/transacciones/**",
@@ -144,7 +147,6 @@ public class SecurityConfig {
                                 "GANADERO",
                                 "ADMIN"
                         )
-
 
                         .anyRequest()
                         .authenticated()

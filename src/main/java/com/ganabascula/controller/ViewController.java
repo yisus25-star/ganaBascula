@@ -35,4 +35,9 @@ public class ViewController {
     public String admin() {
         return "admin";
     }
+
+    @GetMapping("/reportes")
+    public String reportes() {
+        return "reportes";
+    }
 }

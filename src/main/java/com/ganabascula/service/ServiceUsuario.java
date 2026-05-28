@@ -6,8 +6,15 @@ import com.ganabascula.dto.response.LoginResponseDto;
 
 public interface ServiceUsuario {
 
-    void registrarUsuario(RegistroUsuarioRequestDto registroDTO);
+    void registrarUsuario(
+            RegistroUsuarioRequestDto registroDTO
+    );
 
-    LoginResponseDto login(LoginRequestDto loginDTO);
+    LoginResponseDto login(
+            LoginRequestDto loginDTO
+    );
 
+    void aprobarUsuario(Long id);
+
+    void rechazarUsuario(Long id);
 }

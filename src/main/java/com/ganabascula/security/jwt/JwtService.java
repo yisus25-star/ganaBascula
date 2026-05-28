@@ -14,7 +14,7 @@ import java.util.function.Function;
 public class JwtService {
 
     private static final String SECRET_KEY =
-            "ganabascula_secret_key_super_segura_2026";
+            "8d2f9c1e7a6b4d3f9e2c7a1b5f8d6c3e4a9b7c2d1f5e8a6b3c9d7e1f4a2b6c8";
 
     public String generarToken(String cedula) {
 

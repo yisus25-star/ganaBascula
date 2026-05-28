@@ -5,6 +5,8 @@ import com.ganabascula.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.authentication.DisabledException;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import org.springframework.security.core.userdetails.User;
@@ -22,7 +24,8 @@ import java.util.List;
 public class CustomUserDetailService
         implements UserDetailsService {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioRepository
+            usuarioRepository;
 
     @Override
     public UserDetails loadUserByUsername(
@@ -38,22 +41,26 @@ public class CustomUserDetailService
                         )
                 );
 
-        // VALIDAR QUE EL USUARIO ESTÉ ACTIVO
         if (
                 usuario.getEstado()
-                        != Usuario.EstadoUsuario.ACTIVO
+                        == Usuario.EstadoUsuario.PENDIENTE
         ) {
 
-            throw new UsernameNotFoundException(
-                    "Tu cuenta está "
-                            + usuario.getEstado()
-                            .name()
-                            .toLowerCase()
-                            + ". Contacta al administrador."
+            throw new DisabledException(
+                    "Tu cuenta aún está pendiente de aprobación"
             );
         }
 
-        // RETORNAR USUARIO AUTENTICADO
+        if (
+                usuario.getEstado()
+                        == Usuario.EstadoUsuario.RECHAZADO
+        ) {
+
+            throw new DisabledException(
+                    "Tu cuenta fue rechazada por el administrador"
+            );
+        }
+
         return new User(
 
                 usuario.getCedula(),

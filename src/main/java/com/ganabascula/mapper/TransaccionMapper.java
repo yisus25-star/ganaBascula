@@ -13,6 +13,8 @@ import com.ganabascula.entity.Transaccion;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface TransaccionMapper {
 
@@ -32,6 +34,14 @@ public interface TransaccionMapper {
     @Mapping(target = "gastos", source = "gastos")
     TransaccionResponseDto toDto(
             Transaccion transaccion
+    );
+
+    List<CategoriaAnimalResponseDto> mapDetalles(
+            List<DetalleTransaccionAnimal> detalles
+    );
+
+    List<GastoAdicionalResponseDto> mapGastos(
+            List<GastoAdicional> gastos
     );
 
     CategoriaAnimalResponseDto detalleToDto(

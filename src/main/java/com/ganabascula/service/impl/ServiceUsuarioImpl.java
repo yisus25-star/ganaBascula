@@ -106,7 +106,7 @@ public class ServiceUsuarioImpl implements ServiceUsuario {
                 loginDTO.getCedula()
         );
 
-        return new LoginResponseDto(token);
+        return new LoginResponseDto(token, usuario.getRol().getNombre());
     }
 
     @Override

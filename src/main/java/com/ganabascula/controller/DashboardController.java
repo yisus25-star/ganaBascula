@@ -1,5 +1,6 @@
 package com.ganabascula.controller;
 
+import com.ganabascula.dto.response.ApiResponse;
 import com.ganabascula.dto.response.DashboardResponseDto;
 import com.ganabascula.service.DashboardService;
 
@@ -12,18 +13,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/api/v1/dashboard")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<DashboardResponseDto> obtenerDashboard() {
+    public ResponseEntity<ApiResponse<DashboardResponseDto>> obtenerDashboard() {
 
         return ResponseEntity.ok(
-                dashboardService.obtenerDashboard()
+
+                new ApiResponse<>(
+
+                        "Dashboard obtenido correctamente",
+
+                        dashboardService.obtenerDashboard()
+                )
         );
     }
 }
